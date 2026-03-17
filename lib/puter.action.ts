@@ -67,7 +67,7 @@ Promise<DesignItem | null> =>{
     }
 
     try {
-        const key = `${PROJECT_PREFIX}${projectId}`;
+        const key = `${PROJECT_PREFIX}${item.ownerId}_${projectId}`;
         await puter.kv.set(key, payload);
 
         return payload;
@@ -79,9 +79,11 @@ Promise<DesignItem | null> =>{
             
 }
 
-export const getProjects = async (): Promise<DesignItem[]> => {
+export const getProjects = async (userId: string | null): Promise<DesignItem[]> => {
+    if (!userId) return [];
+    
     try {
-        const projects = (await puter.kv.list(PROJECT_PREFIX, true)).map(({value}) => value as DesignItem)
+        const projects = (await puter.kv.list(`${PROJECT_PREFIX}${userId}_`, true)).map(({value}) => value as DesignItem)
 
         return projects;
 
@@ -91,9 +93,11 @@ export const getProjects = async (): Promise<DesignItem[]> => {
     }
 }
 
-export const getProjectById = async ({ id }: { id: string }): Promise<DesignItem | null> => {
+export const getProjectById = async ({ id, userId }: { id: string, userId: string | null }): Promise<DesignItem | null> => {
+    if (!userId) return null;
+    
     try {
-        const key = `${PROJECT_PREFIX}${id}`;
+        const key = `${PROJECT_PREFIX}${userId}_${id}`;
         const project = await puter.kv.get(key);
 
         return project as DesignItem | null;
@@ -105,7 +109,7 @@ export const getProjectById = async ({ id }: { id: string }): Promise<DesignItem
 
 export const updateProject = async (item: DesignItem): Promise<DesignItem | null> => {
     try {
-        const key = `${PROJECT_PREFIX}${item.id}`;
+        const key = `${PROJECT_PREFIX}${item.ownerId}_${item.id}`;
         await puter.kv.set(key, item);
         return item;
     } catch (error) {

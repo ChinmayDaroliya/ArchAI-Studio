@@ -90,7 +90,7 @@ const VisualizerId = () => {
 
       setIsProjectLoading(true);
 
-      const fetchedProject = await getProjectById({ id });
+      const fetchedProject = await getProjectById({ id, userId });
 
       if (!isMounted) return;
 

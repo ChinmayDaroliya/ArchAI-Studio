@@ -4,6 +4,12 @@ interface AuthState {
     userId: string | null;
 }
 
+interface AuthContext extends AuthState {
+    refreshAuth: () => Promise<boolean>;
+    signIn: () => Promise<boolean>;
+    signOut: () => Promise<void>;
+}
+
 interface Material {
     id: string;
     name: string;
