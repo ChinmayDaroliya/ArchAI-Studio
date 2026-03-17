@@ -1,6 +1,6 @@
 import Button from 'components/ui/Button';
 import { generate3DView } from 'lib/ai.action';
-import { createProject, getProjectById } from 'lib/puter.action';
+import { createProject, getProjectById, updateProject } from 'lib/puter.action';
 import { Box, Download, RefreshCcw, Share2, X } from 'lucide-react';
 import  { useEffect, useRef, useState } from 'react'
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
@@ -31,6 +31,17 @@ const VisualizerId = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  const handleShare = async () => {
+    if (!project) return;
+
+    const updated = { ...project, isPublic: !project.isPublic };
+    const saved = await updateProject(updated);
+
+    if (saved) {
+      setProject(saved);
+    }
   }
 
   const runGeneration = async (item: DesignItem) => {
@@ -152,9 +163,9 @@ const VisualizerId = () => {
                           <Download className='w-4 h-4 mr-2'/> Export 
                           </Button>
 
-                          <Button size='sm' onClick={()=>{}} className='share'>
+                          <Button size='sm' onClick={handleShare} className='share'>
                             <Share2 className='w-4 h-4 mr-2'/>
-                            Share
+                            {project?.isPublic ? 'Unshare' : 'Share'}
                           </Button>  
                       </div>
                   </div>

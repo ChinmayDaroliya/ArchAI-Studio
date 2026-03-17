@@ -3,7 +3,7 @@ import { getORCreateHostingConfig, uploadImageToHosting } from "./puter.hosting"
 import { isHostedUrl } from "./utils";
 import { PUTER_WORKER_URL } from "./constants";
 
-// const PROJECT_PREFIX = 'archai_project_';
+const PROJECT_PREFIX = 'archai_project_';
 
 export const signIn = async () => await puter.auth.signIn();
 
@@ -18,7 +18,7 @@ export const getCurrentUser = async () => {
 }
 
 export const createProject = async ({item , visibility="private"}:CreateProjectParams):
-Promise<DesignItem | null |undefined> =>{
+Promise<DesignItem | null> =>{
 
       if(!PUTER_WORKER_URL) {
         console.warn('Missing VITE_PUTER_WORKER_URL; skip history fetch;');
@@ -67,23 +67,10 @@ Promise<DesignItem | null |undefined> =>{
     }
 
     try {
-        // Call the Puter worker to store project in kv
-        const response = await puter.workers.exec(`${PUTER_WORKER_URL}/api/projects/save`, {
-            method: 'POST',
-            body: JSON.stringify({
-                project: payload,
-                visibility
-            })
-        });
+        const key = `${PROJECT_PREFIX}${projectId}`;
+        await puter.kv.set(key, payload);
 
-        if(!response.ok) {
-            console.error('failed to save the project', await response.text());
-            return null;
-        }
-
-        const data = (await response.json()) as { project?: DesignItem | null }
-
-        return data?.project ?? null;
+        return payload;
 
     } catch (e) {
         console.log("Failed to save the project", e);
@@ -92,23 +79,11 @@ Promise<DesignItem | null |undefined> =>{
             
 }
 
-export const getProjects = async () => {
-    if(!PUTER_WORKER_URL){
-        console.warn('Missing VITE_PUTER_WORKER_URL; skip history fetch');  
-        return [];
-
-    }
-
+export const getProjects = async (): Promise<DesignItem[]> => {
     try {
-        const respone = await puter.workers.exec(`${PUTER_WORKER_URL}/api/projects/list`, {method:'GET'});
+        const projects = (await puter.kv.list(PROJECT_PREFIX, true)).map(({value}) => value as DesignItem)
 
-        if(!respone.ok){
-            console.error("Failed to fetch history", await respone.text());
-            return [];
-        }
-
-        const data = (await respone.json()) as {projects?: DesignItem[] | null};
-        return Array.isArray(data?.projects) ? data?.projects : [];
+        return projects;
 
     } catch (error) {
         console.error("Failed to get projects", error);
@@ -116,36 +91,25 @@ export const getProjects = async () => {
     }
 }
 
-export const getProjectById = async ({ id }: { id: string }) => {
-    if (!PUTER_WORKER_URL) {
-        console.warn("Missing VITE_PUTER_WORKER_URL; skipping project fetch.");
-        return null;
-    }
-
-    console.log("Fetching project with ID:", id);
-
+export const getProjectById = async ({ id }: { id: string }): Promise<DesignItem | null> => {
     try {
-        const response = await puter.workers.exec(
-            `${PUTER_WORKER_URL}/api/projects/get?id=${encodeURIComponent(id)}`,
-            { method: "GET" },
-        );
+        const key = `${PROJECT_PREFIX}${id}`;
+        const project = await puter.kv.get(key);
 
-        console.log("Fetch project response:", response);
-
-        if (!response.ok) {
-            console.error("Failed to fetch project:", await response.text());
-            return null;
-        }
-
-        const data = (await response.json()) as {
-            project?: DesignItem | null;
-        };
-
-        console.log("Fetched project data:", data);
-
-        return data?.project ?? null;
+        return project as DesignItem | null;
     } catch (error) {
         console.error("Failed to fetch project:", error);
+        return null;
+    }
+};
+
+export const updateProject = async (item: DesignItem): Promise<DesignItem | null> => {
+    try {
+        const key = `${PROJECT_PREFIX}${item.id}`;
+        await puter.kv.set(key, item);
+        return item;
+    } catch (error) {
+        console.error("Failed to update project", error);
         return null;
     }
 };
