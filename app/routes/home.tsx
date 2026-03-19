@@ -80,10 +80,10 @@ export default function Home() {
             <div className="dot">
               <div className="pulse"></div>
             </div>
-            <p>Introducting ArchAI Studio</p>
+            <p>Introducing ArchAI Studio</p>
           </div>
 
-          <h1>Transform 2D ideas into stunning 3D spaces instantly</h1>
+          <h1>Transform 2D floor plans into 3D layouts instantly</h1>
         
           <p className="subtitle">ArchAI Studio helps architects turn floor plans into stunning visualizations and finished designs with the power of AI.</p>
           
@@ -92,7 +92,7 @@ export default function Home() {
               Start Building <ArrowRight className="icon" />
             </a>
 
-            <Button variant="outline" size="lg" className="demo">Watch Demo</Button>
+            {/* <Button variant="outline" size="lg" className="demo">Watch Demo</Button> */}
           </div>
 
           <div className="upload-shell" id="upload">
